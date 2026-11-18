@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Localization;
 using Motor.Inquiry.API.Extensions;
 using Motor.Inquiry.API.Middlewares;
+using Motor.Inquiry.Infrastructure.Persistence;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,11 +25,17 @@ builder.Services.AddOpenApi();
 builder.Services.AddDatabaseExtensions(builder.Configuration);
 builder.Services.AddValidationAndMapping();
 builder.Services.AddApplicationServices(builder.Configuration);
+builder.Services.AddApiLocalization();
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<AppDbContext>("Database");
+
+builder.Services.AddAppRateLimiter();
 
 var app = builder.Build();
 
 
 // 4. Configure the HTTP request pipeline
+app.UseApiLocalization();
 app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseSerilogRequestLogging();
 
@@ -41,7 +48,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseAuthorization();
-app.MapControllers();
 
+app.MapControllers()
+   .RequireRateLimiting("fixed");
+
+app.MapHealthChecks("/health");
 
 app.Run();

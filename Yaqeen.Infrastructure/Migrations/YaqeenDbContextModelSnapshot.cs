@@ -22,6 +22,65 @@ namespace Yaqeen.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Yaqeen.Domain.Entities.Address", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("District")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NationalId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("PostalCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Street")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NationalId");
+
+                    b.ToTable("Addresses");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            City = "الرياض",
+                            District = "الملز",
+                            NationalId = "1011223344",
+                            PostalCode = "12345",
+                            Street = "شارع الستين"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            City = "أبها",
+                            District = "الخالدية",
+                            NationalId = "1099887766",
+                            PostalCode = "54321",
+                            Street = "شارع الحزام"
+                        });
+                });
+
             modelBuilder.Entity("Yaqeen.Domain.Entities.Citizens", b =>
                 {
                     b.Property<string>("NationalId")
@@ -34,15 +93,19 @@ namespace Yaqeen.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Gender")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Gender")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaritalStatusId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Nationality")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("NationalId");
+
+                    b.HasIndex("MaritalStatusId");
 
                     b.ToTable("Citizens");
 
@@ -52,7 +115,8 @@ namespace Yaqeen.Infrastructure.Migrations
                             NationalId = "1011223344",
                             DateOfBirth = new DateTime(1995, 5, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             FullName = "Faisal",
-                            Gender = "Male",
+                            Gender = 1,
+                            MaritalStatusId = 1,
                             Nationality = "SA"
                         },
                         new
@@ -60,8 +124,58 @@ namespace Yaqeen.Infrastructure.Migrations
                             NationalId = "1099887766",
                             DateOfBirth = new DateTime(1998, 10, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             FullName = "Sara",
-                            Gender = "Female",
+                            Gender = 2,
+                            MaritalStatusId = 2,
                             Nationality = "SA"
+                        });
+                });
+
+            modelBuilder.Entity("Yaqeen.Domain.Entities.MaritalStatus", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MaritalStatuses");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            NameAr = "أعزب",
+                            NameEn = "Single"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            NameAr = "متزوج",
+                            NameEn = "Married"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            NameAr = "مطلق",
+                            NameEn = "Divorced"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            NameAr = "أرمل",
+                            NameEn = "Widowed"
                         });
                 });
 
@@ -215,6 +329,28 @@ namespace Yaqeen.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Yaqeen.Domain.Entities.Address", b =>
+                {
+                    b.HasOne("Yaqeen.Domain.Entities.Citizens", "Citizen")
+                        .WithMany("Addresses")
+                        .HasForeignKey("NationalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Citizen");
+                });
+
+            modelBuilder.Entity("Yaqeen.Domain.Entities.Citizens", b =>
+                {
+                    b.HasOne("Yaqeen.Domain.Entities.MaritalStatus", "MaritalStatus")
+                        .WithMany("Citizens")
+                        .HasForeignKey("MaritalStatusId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MaritalStatus");
+                });
+
             modelBuilder.Entity("Yaqeen.Domain.Entities.VehicleModel", b =>
                 {
                     b.HasOne("Yaqeen.Domain.Entities.VehicleMake", "Make")
@@ -243,6 +379,16 @@ namespace Yaqeen.Infrastructure.Migrations
                     b.Navigation("Make");
 
                     b.Navigation("Model");
+                });
+
+            modelBuilder.Entity("Yaqeen.Domain.Entities.Citizens", b =>
+                {
+                    b.Navigation("Addresses");
+                });
+
+            modelBuilder.Entity("Yaqeen.Domain.Entities.MaritalStatus", b =>
+                {
+                    b.Navigation("Citizens");
                 });
 
             modelBuilder.Entity("Yaqeen.Domain.Entities.VehicleMake", b =>

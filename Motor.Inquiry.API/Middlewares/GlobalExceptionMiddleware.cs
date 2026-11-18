@@ -40,11 +40,9 @@ namespace Motor.Inquiry.API.Middlewares
         {
             context.Response.ContentType = "application/json";
 
-            // القيم الافتراضية للخطأ العام (500)
             var statusCode = HttpStatusCode.InternalServerError;
             var message = "An unexpected error occurred on the server.";
 
-            // التعامل مع الاستثناءات المخصصة برمجياً وتحويل المفاتيح إلى رسائل واضحة
             switch (exception)
             {
                 case BadRequestException ex:
@@ -64,6 +62,11 @@ namespace Motor.Inquiry.API.Middlewares
                         "VehicleNotFound" => "Vehicle not found",
                         _ => ex.Message
                     };
+                    break;
+
+                case UnauthorizedAccessException ex:
+                    statusCode = HttpStatusCode.Unauthorized; // 401
+                    message = ex.Message;
                     break;
             }
 
